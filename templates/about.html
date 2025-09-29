@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About | BreastScan AI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            secondary: '#8b5cf6',
+            accent: '#ec4899',
+            dark: '#1e293b',
+            light: '#f8fafc'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+    }
+    .hero-pattern {
+      background-color: #2563eb;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-shadow:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+    }
+  
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-up {
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+    
+    /* Stagger animations */
+    .fade-in-up:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in-up:nth-child(2) { animation-delay: 0.2s; }
+    .fade-in-up:nth-child(3) { animation-delay: 0.3s; }
+    .fade-in-up:nth-child(4) { animation-delay: 0.4s; }
+    .fade-in-up:nth-child(5) { animation-delay: 0.5s; }
+    
+    /* Mobile menu */
+    .mobile-menu {
+      transform: translateX(100%);
+      transition: transform 0.3s ease-out;
+    }
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+    
+    /* Improved contrast */
+    .text-high-contrast {
+      color: #1a202c;
+    }
+    
+    /* Better focus states for accessibility */
+    a:focus, button:focus {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+      .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      
+      .performance-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .performance-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased text-dark">
+  <!-- Header -->
+  <header class="hero-pattern text-white py-4 sticky top-0 z-50">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-laptop-medical text-3xl"></i>
+        <span class="text-2xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+      </div>
+      
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:block">
+        <ul class="flex space-x-8 font-medium">
+          <li><a href="/#home" class="hover:text-accent transition py-2 px-1 rounded">Home</a></li>
+          <li><a href="/about" class="hover:text-accent transition py-2 px-1 rounded font-semibold border-b-2 border-accent">About</a></li>
+          <li><a href="/#upload" class="hover:text-accent transition py-2 px-1 rounded">Upload</a></li>
+        </ul>
+      </nav>
+      
+      <!-- Mobile menu button -->
+      <button class="md:hidden text-white focus:outline-none" id="mobile-menu-button">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+    </div>
+    
+    <!-- Mobile Navigation -->
+    <div class="mobile-menu fixed top-0 right-0 h-full w-64 bg-blue-700 text-white p-6 shadow-lg z-50" id="mobile-menu">
+      <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-laptop-medical text-2xl"></i>
+          <span class="text-xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+        </div>
+        <button id="close-menu" class="text-white">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      <ul class="space-y-6">
+        <li><a href="/#home" class="block py-2 px-4 hover:bg-blue-600 rounded transition">Home</a></li>
+        <li><a href="/about" class="block py-2 px-4 bg-blue-600 rounded font-semibold">About</a></li>
+        <li><a href="/#upload" class="block py-2 px-4 hover:bg-blue-600 rounded transition">Upload</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- About Content -->
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50 py-12">
+    <div class="container mx-auto px-4 lg:px-6">
+      <div class="text-center mb-12 fade-in-up">
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-4">
+          About BreastScan AI
+        </h1>
+        <p class="mt-4 text-lg text-gray-700 max-w-3xl mx-auto">
+          A deep learning–powered tool for breast cancer detection and classification using ultrasound images
+        </p>
+      </div>
+
+      <div class="space-y-8 max-w-4xl mx-auto">
+        <!-- Purpose Section -->
+        <div class="bg-white rounded-xl card-shadow p-6 fade-in-up">
+          <h2 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fas fa-users mr-3 text-primary text-2xl"></i>
+            Purpose & Mission
+          </h2>
+          <div class="prose prose-gray max-w-none">
+            <p class="text-gray-700 leading-relaxed">
+              BreastScan AI was developed to assist healthcare professionals in the early detection and classification
+              of breast abnormalities from ultrasound scans. By leveraging deep learning, the system provides
+              fast, accurate, and reliable predictions to support clinical decisions.
+            </p>
+            <p class="text-gray-700 leading-relaxed mt-4">
+              Early detection saves lives. Our mission is to provide a second-opinion system that empowers radiologists
+              and clinicians by highlighting areas of concern that may require further review.
+            </p>
+          </div>
+        </div>
+
+        <!-- Technology Section -->
+        <div class="bg-white rounded-xl card-shadow p-6 fade-in-up">
+          <h2 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fas fa-brain mr-3 text-primary text-2xl"></i>
+            Technology & Methodology
+          </h2>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-3">Deep Learning Workflow</h3>
+              <div class="space-y-2">
+                <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold transition hover:bg-blue-200">Dataset Cleaning</span>
+                <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold transition hover:bg-blue-200">Data Augmentation</span>
+                <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold transition hover:bg-blue-200">CNN Model Training</span>
+              </div>
+              <p class="text-sm text-gray-600 mt-3">
+                From removing mask labels to generating balanced datasets, BreastScan AI was built with a robust
+                preprocessing pipeline and trained on thousands of breast ultrasound images.
+              </p>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-3">Key Features</h3>
+              <ul class="space-y-3 text-gray-700">
+                <li class="flex items-center"><i class="fas fa-bolt mr-3 text-green-500"></i> Real-time predictions</li>
+                <li class="flex items-center"><i class="fas fa-database mr-3 text-green-500"></i> Trained on 5000+ images</li>
+                <li class="flex items-center"><i class="fas fa-cogs mr-3 text-green-500"></i> Custom preprocessing pipeline</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classification Categories -->
+        <div class="bg-white rounded-xl card-shadow p-6 fade-in-up">
+          <h2 class="text-xl font-semibold mb-4">Classification Categories</h2>
+          <p class="text-gray-600 mb-6">BreastScan AI classifies ultrasound images into three categories:</p>
+          <div class="grid gap-4 md:grid-cols-3">
+            <div class="p-5 border border-gray-200 rounded-lg transition hover:shadow-md">
+              <div class="w-4 h-4 bg-green-500 rounded-full mb-3"></div>
+              <h3 class="font-semibold text-gray-900">Benign</h3>
+              <p class="text-sm text-gray-600 mt-2">Non-cancerous findings with no malignant features.</p>
+            </div>
+            <div class="p-5 border border-gray-200 rounded-lg transition hover:shadow-md">
+              <div class="w-4 h-4 bg-red-500 rounded-full mb-3"></div>
+              <h3 class="font-semibold text-gray-900">Malignant</h3>
+              <p class="text-sm text-gray-600 mt-2">Cancerous tissue requiring immediate medical evaluation.</p>
+            </div>
+            <div class="p-5 border border-gray-200 rounded-lg transition hover:shadow-md">
+              <div class="w-4 h-4 bg-blue-500 rounded-full mb-3"></div>
+              <h3 class="font-semibold text-gray-900">Normal</h3>
+              <p class="text-sm text-gray-600 mt-2">Healthy breast tissue with no suspicious features.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="bg-white rounded-xl card-shadow p-6 fade-in-up">
+          <h2 class="text-xl font-semibold mb-4">Performance Metrics</h2>
+          <p class="text-gray-600 mb-6">Evaluation results from our trained CNN model</p>
+          <div class="grid gap-4 performance-grid md:grid-cols-4">
+            <div class="text-center p-5 bg-blue-50 rounded-lg border border-blue-100 transition hover:shadow-md">
+              <div class="text-2xl font-bold text-blue-700">82%</div>
+              <div class="text-sm text-blue-600 font-medium">Accuracy</div>
+            </div>
+            <div class="text-center p-5 bg-green-50 rounded-lg border border-green-100 transition hover:shadow-md">
+              <div class="text-2xl font-bold text-green-700">83%</div>
+              <div class="text-sm text-green-600 font-medium">Precision</div>
+            </div>
+            <div class="text-center p-5 bg-purple-50 rounded-lg border border-purple-100 transition hover:shadow-md">
+              <div class="text-2xl font-bold text-purple-700">82%</div>
+              <div class="text-sm text-purple-600 font-medium">Recall</div>
+            </div>
+            <div class="text-center p-5 bg-orange-50 rounded-lg border border-orange-100 transition hover:shadow-md">
+              <div class="text-2xl font-bold text-orange-700">82%</div>
+              <div class="text-sm text-orange-600 font-medium">F1 Score</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 fade-in-up">
+          <h2 class="text-xl font-semibold mb-4 flex items-center text-amber-800">
+            <i class="fas fa-exclamation-triangle mr-3 text-amber-600"></i>
+            Important Medical Disclaimer
+          </h2>
+          <div class="space-y-3 text-amber-800">
+            <p><strong>BreastScan AI is for research and educational purposes only.</strong> Predictions must not be used as the sole basis for diagnosis or treatment.</p>
+            <p>Always consult with qualified healthcare professionals for proper medical evaluation and treatment.</p>
+            <p>The developers of this tool assume no responsibility for clinical decisions based on its outputs.</p>
+            <p>This tool is not FDA-approved or certified for clinical diagnostic use.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-blue-700 text-white py-8">
+    <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+      <div class="flex items-center space-x-2 mb-4 md:mb-0">
+        <i class="fas fa-laptop-medical text-2xl"></i>
+        <span class="text-xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+      </div>
+      <nav>
+        <ul class="flex space-x-6 font-medium">
+          <li><a href="/#home" class="hover:text-blue-200 transition py-1 px-2 rounded">Home</a></li>
+          <li><a href="/about" class="hover:text-accent transition py-1 px-2 rounded font-semibold">About</a></li>
+          <li><a href="/#upload" class="hover:text-blue-200 transition py-1 px-2 rounded">Upload</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="text-center text-blue-100 text-sm mt-6">
+      © 2025 BreastScan AI. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu functionality
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const closeMenuButton = document.getElementById('close-menu');
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+    
+    closeMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      document.body.style.overflow = 'auto';
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (mobileMenu.classList.contains('open') && 
+          !mobileMenu.contains(e.target) && 
+          e.target !== mobileMenuButton) {
+        mobileMenu.classList.remove('open');
+        document.body.style.overflow = 'auto';
+      }
+    });
+    
+    // Scroll-based animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    // Observe all elements with fade-in-up class
+    document.querySelectorAll('.fade-in-up').forEach(el => {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

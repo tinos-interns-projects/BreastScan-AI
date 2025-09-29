@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BreastScan AI | Breast Cancer Detection</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            secondary: '#8b5cf6',
+            accent: '#ec4899',
+            dark: '#1e293b',
+            light: '#f8fafc'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+    }
+    .hero-pattern {
+      background-color: #2563eb;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-shadow:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+    }
+    .upload-container {
+      transition: all 0.3s ease;
+    }
+    .upload-container:hover {
+      transform: translateY(-5px);
+    }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-up {
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+    
+    /* Stagger animations */
+    .fade-in-up:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in-up:nth-child(2) { animation-delay: 0.2s; }
+    .fade-in-up:nth-child(3) { animation-delay: 0.3s; }
+    
+    /* Mobile menu */
+    .mobile-menu {
+      transform: translateX(100%);
+      transition: transform 0.3s ease-out;
+    }
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+    
+    /* Improved contrast */
+    .text-high-contrast {
+      color: #1a202c;
+    }
+    
+    /* Better focus states for accessibility */
+    a:focus, button:focus {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+    
+    /* Feature icon styling */
+    .feature-icon {
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover .feature-icon {
+      transform: scale(1.1);
+    }
+    
+    /* Image preview styling */
+    .image-preview-container {
+      display: none;
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      object-fit: contain;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      margin: 0 auto;
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+      .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .upload-layout {
+        flex-direction: column;
+      }
+      
+      .upload-layout > div {
+        width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased text-dark">
+  <!-- Header -->
+  <header class="hero-pattern text-white py-4 sticky top-0 z-50">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-laptop-medical text-3xl"></i>
+        <span class="text-2xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+      </div>
+      
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:block">
+        <ul class="flex space-x-8 font-medium">
+          <li><a href="#home" class="hover:text-accept transition py-2 px-1 rounded font-semibold border-b-2 border-accent">Home</a></li>
+          <li><a href="/about" class="hover:text-accent transition py-2 px-1 rounded">About</a></li>
+          <li><a href="#upload" class="hover:text-accent transition py-2 px-1 rounded">Upload</a></li>
+        </ul>
+      </nav>
+      
+      <!-- Mobile menu button -->
+      <button class="md:hidden text-white focus:outline-none" id="mobile-menu-button">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+    </div>
+    
+    <!-- Mobile Navigation -->
+    <div class="mobile-menu fixed top-0 right-0 h-full w-64 bg-blue-700 text-white p-6 shadow-lg z-50" id="mobile-menu">
+      <div class="flex justify-between items-center mb-8">
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-laptop-medical text-2xl"></i>
+          <span class="text-xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+        </div>
+        <button id="close-menu" class="text-white">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      <ul class="space-y-6">
+        <li><a href="#home" class="block py-2 px-4 bg-blue-600 rounded font-semibold">Home</a></li>
+        <li><a href="/about" class="block py-2 px-4 hover:bg-blue-600 rounded transition">About</a></li>
+        <li><a href="#upload" class="block py-2 px-4 hover:bg-blue-600 rounded transition">Upload</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero-pattern text-white py-16 md:py-24 fade-in-up">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Advanced Breast Cancer Detection</h1>
+      <p class="text-xl md:text-2xl max-w-3xl mx-auto mb-10">Using cutting-edge AI technology to analyze histopathology images for early detection of breast cancer</p>
+      <a href="#upload" class="bg-accent hover:bg-pink-600 text-white font-bold py-4 px-8 rounded-full text-lg transition duration-300 inline-flex items-center pulse">
+        Get Started <i class="fas fa-arrow-right ml-2"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-12 md:mb-16 fade-in-up">How It Works</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+        <div class="text-center p-6 rounded-lg bg-gray-50 card-shadow fade-in-up feature-card">
+          <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 feature-icon">
+            <i class="fas fa-upload"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Upload Image</h3>
+          <p class="text-gray-600">Upload a histopathology image of breast tissue for analysis.</p>
+        </div>
+        <div class="text-center p-6 rounded-lg bg-gray-50 card-shadow fade-in-up feature-card">
+          <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 feature-icon">
+            <i class="fas fa-brain"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">AI Analysis</h3>
+          <p class="text-gray-600">Our advanced AI model analyzes the image using deep learning algorithms.</p>
+        </div>
+        <div class="text-center p-6 rounded-lg bg-gray-50 card-shadow fade-in-up feature-card">
+          <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 feature-icon">
+            <i class="fas fa-file-medical-alt"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Get Results</h3>
+          <p class="text-gray-600">Receive detailed results indicating benign, malignant, or normal tissue.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Choose Our AI Classification Tool Section -->
+  <section class="bg-gray-50 py-16">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4 fade-in-up">Why Choose Our AI Classification Tool?</h2>
+        <p class="text-lg text-gray-600 mb-12 fade-in-up">
+          Built with state-of-the-art deep learning technology to support medical professionals in making informed decisions.
+        </p>
+
+        <!-- Features Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center feature-grid">
+          
+          <!-- Feature 1 -->
+          <div class="bg-white p-6 rounded-lg card-shadow fade-in-up">
+            <div class="flex justify-center mb-4">
+              <div class="bg-blue-600 p-4 rounded-md feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Fast Analysis</h3>
+            <p class="text-gray-600 text-sm">Get results in seconds with our optimized CNN model trained on thousands of ultrasound images.</p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="bg-white p-6 rounded-lg card-shadow fade-in-up">
+            <div class="flex justify-center mb-4">
+              <div class="bg-blue-600 p-4 rounded-md feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 .35.06.687.17 1h.01a4.002 4.002 0 01-2.32 5.517M15 11h2a4 4 0 10-8 0h2a2 2 0 114 0z" />
+                </svg>
+              </div>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">High Accuracy</h3>
+            <p class="text-gray-600 text-sm">Trained on extensive datasets with validated performance metrics for reliable classification.</p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="bg-white p-6 rounded-lg card-shadow fade-in-up">
+            <div class="flex justify-center mb-4">
+              <div class="bg-blue-600 p-4 rounded-md feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 极 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5V4H2v16h5m10 0v-6h-4v6m4 0H7" />
+                </svg>
+              </div>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Healthcare Support</h3>
+            <p class="text-gray-600 text-sm">Designed to assist medical professionals in their diagnostic workflow and decision-making process.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Upload Section -->
+  <section id="upload" class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto bg-white rounded-xl card-shadow overflow-hidden fade-in-up">
+        <div class="md:flex upload-layout">
+          <div class="md:w-2/5 bg-primary text-white p-8 md:p-10 flex flex-col justify-center">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6">Upload Image</h2>
+            <p class="mb-4 flex items-center"><i class="fas fa-check-circle mr-3"></i> Supported formats: JPG, PNG, JPEG</p>
+            <p class="mb-4 flex items-center"><i class="fas fa-check-circle mr-3"></i> High-resolution images recommended</p>
+            <p class="flex items-center"><i class="fas fa-check-circle mr-3"></i> Results in seconds</p>
+          </div>
+          <div class="md:w-3/5 p-6 md:p-8 lg:p-10">
+            <form action="/" method="post" enctype="multipart/form-data" class="space-y-6" id="upload-form">
+              <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center upload-container hover:border-primary transition-colors">
+                <i class="fas fa-cloud-upload-alt text-4xl text-primary mb-4"></i>
+                <p class="text-gray-600 mb-2">Drag & drop your image here</p>
+                <p class="text-gray-500 text-sm mb-4">or</p>
+                <label for="file-upload" class="cursor-pointer bg-primary text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition inline-block">
+                  Browse Files
+                </label>
+                <input id="file-upload" name="file" type="file" class="hidden" required accept=".jpg,.jpeg,.png">
+                <p id="file-error" class="text-red-500 text-sm mt-2 hidden">Please select a valid image file (JPG, PNG, JPEG)</p>
+              </div>
+
+              <!-- Added error box (hidden by default) -->
+              <div id="grayscale-error" class="hidden mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                <strong class="font-bold">Error:</strong>
+                <span class="block sm:inline"> Only grayscale images are allowed.</span>
+              </div>
+              
+              <!-- Image Preview Container -->
+              <div id="image-preview-container" class="image-preview-container">
+                <h3 class="text-lg font-semibold mb-3 text-gray-700">Image Preview</h3>
+                <img id="image-preview" class="image-preview" alt="Image preview">
+              </div>
+              
+              <div id="file-preview" class="hidden">
+                <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+                    <span id="file-name" class="font-medium"></span>
+                  </div>
+                  <button type="button" id="remove-file" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="submit" class="w-full bg-accent hover:bg-pink-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                <i class="fas fa-search mr-2"></i> Analyze Image
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Disclaimer Section -->
+  <section class="py-12 bg-amber-50">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto bg-amber-100 border border-amber-200 rounded-lg p-6 md:p-8 fade-in-up">
+        <h2 class="text-xl md:text-2xl font-bold text-amber-800 mb-4 flex items-center">
+          <i class="fas fa-exclamation-triangle mr-3 text-amber-600"></i>
+          Important Disclaimer
+        </h2>
+        <p class="text-amber-800 mb-4">
+          This tool is for research and educational purposes only. It is not intended to replace professional medical diagnosis or treatment.
+        </p>
+        <p class="text-amber-800">
+          Always consult with qualified healthcare professionals for proper medical evaluation and treatment.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-blue-700 text-white py-8">
+    <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+      <div class="flex items-center space-x-2 mb-4 md:mb-0">
+        <i class="fas fa-laptop-medical text-2xl"></i>
+        <span class="text-xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+      </div>
+      <nav>
+        <ul class="flex space-x-6 font-medium">
+          <li><a href="#home" class="hover:text-blue-200 transition py-1 px-2 rounded font-semibold">Home</a></li>
+          <li><a href="/about" class="hover:text-blue-200 transition py-1 px-2 rounded">About</a></li>
+          <li><a href="#upload" class="hover:text-blue-200 transition py-1 px-2 rounded">Upload</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="text-center text-blue-100 text-sm mt-6">
+      © 2025 BreastScan AI. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu functionality
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const closeMenuButton = document.getElementById('close-menu');
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+    
+    closeMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      document.body.style.overflow = 'auto';
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (mobileMenu.classList.contains('open') && 
+          !mobileMenu.contains(e.target) && 
+          e.target !== mobileMenuButton) {
+        mobileMenu.classList.remove('open');
+        document.body.style.overflow = 'auto';
+      }
+    });
+    
+    // File upload functionality
+    const fileInput = document.getElementById('file-upload');
+    const uploadArea = document.getElementById('upload-area');
+    const filePreview = document.getElementById('file-preview');
+    const fileName = document.getElementById('file-name');
+    const removeFileBtn = document.getElementById('remove-file');
+    const fileError = document.getElementById('file-error');
+    const grayscaleError = document.getElementById('grayscale-error');
+    const uploadForm = document.getElementById('upload-form');
+    
+    // Image preview elements
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+
+    // Grayscale check helper
+    function checkIfGrayscale(imgSrc, callback) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width; canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, img.width, img.height).data;
+        let isGray = true;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i+1], b = data[i+2];
+          if (r !== g || r !== b) { isGray = false; break; }
+        }
+        callback(isGray);
+      };
+      img.src = imgSrc;
+    }
+    
+    // Handle file selection
+    fileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        
+        if (!validTypes.includes(file.type)) {
+          fileError.classList.remove('hidden');
+          return;
+        }
+        
+        fileError.classList.add('hidden');
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          checkIfGrayscale(e.target.result, function(isGray) {
+            if (!isGray) {
+              grayscaleError.classList.remove('hidden');
+              fileInput.value = '';
+              filePreview.classList.add('hidden');
+              imagePreviewContainer.style.display = 'none';
+              return;
+            }
+            grayscaleError.classList.add('hidden');
+            fileName.textContent = file.name;
+            filePreview.classList.remove('hidden');
+            imagePreview.src = e.target.result;
+            imagePreviewContainer.style.display = 'block';
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Remove selected file
+    removeFileBtn.addEventListener('click', function() {
+      fileInput.value = '';
+      filePreview.classList.add('hidden');
+      imagePreviewContainer.style.display = 'none';
+      grayscaleError.classList.add('hidden');
+    });
+    
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.classList.add('border-primary', 'bg-blue-50');
+    });
+    
+    uploadArea.addEventListener('dragleave', function() {
+      this.classList.remove('border-primary', 'bg-blue-50');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.classList.remove('border-primary', 'bg-blue-50');
+      
+      const file = e.dataTransfer.files[0];
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      
+      if (!validTypes.includes(file.type)) {
+        fileError.classList.remove('hidden');
+        return;
+      }
+      
+      fileError.classList.add('hidden');
+      
+      // Create a FileList object to assign to the input
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInput.files = dataTransfer.files;
+      
+      const reader = new FileReader();
+      reader.onload = function(e2) {
+        checkIfGrayscale(e2.target.result, function(isGray) {
+          if (!isGray) {
+            grayscaleError.classList.remove('hidden');
+            fileInput.value = '';
+            filePreview.classList.add('hidden');
+            imagePreviewContainer.style.display = 'none';
+            return;
+          }
+          grayscaleError.classList.add('hidden');
+          fileName.textContent = file.name;
+          filePreview.classList.remove('hidden');
+          imagePreview.src = e2.target.result;
+          imagePreviewContainer.style.display = 'block';
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Form validation
+    uploadForm.addEventListener('submit', function(e) {
+      if (!fileInput.files || !fileInput.files[0]) {
+        e.preventDefault();
+        fileError.classList.remove('hidden');
+      }
+    });
+    
+    // Scroll-based animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    // Observe all elements with fade-in-up class
+    document.querySelectorAll('.fade-in-up').forEach(el => {
+      el.style.animationPlayState = 'paused';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

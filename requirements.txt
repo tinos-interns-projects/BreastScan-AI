@@ -1,0 +1,21 @@
+# # Core ML and image processing
+# tensorflow==2.16.1
+# numpy==1.26.4
+# pandas==2.2.2
+# scikit-learn==1.5.1
+
+# # Visualization
+# matplotlib==3.9.1
+# seaborn==0.13.2
+
+# # Image augmentation and preprocessing
+# Pillow==10.4.0
+# opencv-python==4.10.0.84
+
+# # Utilities
+# tqdm==4.66.5
+# pathlib==1.0.1
+
+# # For Jupyter / VS Code notebooks
+# ipykernel==6.29.5
+# notebook==7.2.2

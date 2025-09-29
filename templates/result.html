@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Results | BreastScan AI | Breast Cancer Detection</title>
+
+  <!-- Icons & Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            secondary: '#8b5cf6',
+            accent: '#ec4899',
+            dark: '#1e293b',
+            light: '#f8fafc'
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+
+  <!-- PDF libs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .hero-pattern {
+      background-color: #2563eb;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    }
+    .confidence-bar {
+      transition: width 1.5s ease-in-out;
+    }
+    /* Help keep colors intact for print/canvas */
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  </style>
+</head>
+<body class="antialiased text-dark">
+
+  <!-- Header -->
+  <header class="hero-pattern text-white py-4">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-laptop-medical text-3xl"></i>
+        <span class="text-2xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+      </div>
+      <nav>
+        <ul class="flex space-x-8 font-medium">
+          <li><a href="/#home" class="hover:text-accent transition">Home</a></li>
+          <li><a href="/about" class="hover:text-accent transition">About</a></li>
+          <li><a href="/#upload" class="hover:text-accent transition">Upload</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="py-12">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <!-- Results Card -->
+        <div class="bg-white rounded-xl card-shadow overflow-hidden" id="results-card">
+          <!-- Card Header -->
+          <div class="bg-primary text-white p-6">
+            <h1 class="text-3xl font-bold mb-2">Analysis Results</h1>
+            <p class="opacity-90">AI-powered breast cancer detection analysis report</p>
+          </div>
+
+          <!-- Card Body -->
+          <div class="p-8">
+            <!-- File Info -->
+            <div class="mb-10">
+              <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-file-image text-primary mr-2"></i>
+                Analyzed Image
+              </h2>
+              <div class="flex flex-col md:flex-row items-start gap-6 p-4 bg-gray-50 rounded-lg">
+                <div class="w-full md:w-1/3 h-48 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                  <!-- Ensure CORS-safe capture -->
+                  <img
+                    id="preview-image"
+                    src="{{ url_for('uploaded_file', filename=result.filename) }}"
+                    alt="Analyzed image"
+                    class="object-cover w-full h-full"
+                    crossorigin="anonymous"
+                    referrerpolicy="no-referrer"
+                    onerror="this.style.display='none'; document.getElementById('image-placeholder').style.display='flex';"
+                  />
+                  <i class="fas fa-image text-5xl text-gray-400" id="image-placeholder" style="display:none;"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium" id="file-name">{{ result.filename }}</p>
+                  <p class="text-sm text-gray-600 mt-2">Uploaded: <span id="upload-time">{{ upload_time }}</span></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detection Results -->
+            <div class="mb-10">
+              <h2 class="text-xl font-semibold mb-6 flex items-center">
+                <i class="fas fa-microscope text-primary mr-2"></i>
+                Detection Results
+              </h2>
+
+              <div class="space-y-6">
+                <!-- Benign -->
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="font-medium">Benign</span>
+                    <span class="font-semibold" id="benign-confidence">{{ benign_confidence }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full confidence-bar" style="width: {{ benign_confidence }}%"></div>
+                  </div>
+                </div>
+
+                <!-- Malignant -->
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="font-medium">Malignant</span>
+                    <span class="font-semibold" id="malignant-confidence">{{ malignant_confidence }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-2 00 rounded-full h-2.5">
+                    <div class="bg-red-600 h-2.5 rounded-full confidence-bar" style="width: {{ malignant_confidence }}%"></div>
+                  </div>
+                </div>
+
+                <!-- Normal -->
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="font-medium">Normal</span>
+                    <span class="font-semibold" id="normal-confidence">{{ normal_confidence }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-green-600 h-2.5 rounded-full confidence-bar" style="width: {{ normal_confidence }}%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Diagnosis -->
+            <div class="mb-10">
+              <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-diagnoses text-primary mr-2"></i>
+                Diagnosis
+              </h2>
+
+              {% if result.prediction == 'normal' %}
+              <div class="p-6 bg-green-50 border border-green-200 rounded-lg">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-3xl text-green-600"></i>
+                  </div>
+                  <div class="ml-4">
+                    <h3 class="text-2xl font-bold text-green-800">Normal Tissue Detected</h3>
+                    <p class="mt-1 text-green-700">The AI analysis indicates normal breast tissue with {{ result.confidence }}% confidence.</p>
+                  </div>
+                </div>
+              </div>
+              {% elif result.prediction == 'benign' %}
+              <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-3xl text-blue-600"></i>
+                  </div>
+                  <div class="ml-4">
+                    <h3 class="text-2xl font-bold text-blue-800">Benign Tissue Detected</h3>
+                    <p class="mt-1 text-blue-700">The AI analysis indicates benign breast tissue with {{ result.confidence }}% confidence.</p>
+                  </div>
+                </div>
+              </div>
+              {% else %}
+              <div class="p-6 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-3xl text-red-600"></i>
+                  </div>
+                  <div class="ml-4">
+                    <h3 class="text-2xl font-bold text-red-800">Malignant Tissue Detected</h3>
+                    <p class="mt-1 text-red-700">The AI analysis indicates malignant breast tissue with {{ result.confidence }}% confidence.</p>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Recommendations -->
+            <div class="mb-10">
+              <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-notes-medical text-primary mr-2"></i>
+                Recommendations
+              </h2>
+
+              {% if result.prediction == 'normal' %}
+              <div class="bg-blue-50 p-6 rounded-lg">
+                <ul class="space-y-3">
+                  <li class="flex items-start">
+                    <i class="fas fa-check-circle text-blue-600 mt-1 mr-3"></i>
+                    <span>No immediate action needed based on this analysis</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-check-circle text-blue-600 mt-1 mr-3"></i>
+                    <span>Continue with regular screening as recommended by your healthcare provider</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-check-circle text-blue-600 mt-1 mr-3"></i>
+                    <span>Consult with a medical professional for definitive diagnosis</span>
+                  </li>
+                </ul>
+              </div>
+              {% elif result.prediction == 'benign' %}
+              <div class="bg-blue-50 p-6 rounded-lg">
+                <ul class="space-y-3">
+                  <li class="flex items-start">
+                    <i class="fas fa-check-circle text-blue-600 mt-1 mr-3"></i>
+                    <span>Consult with a healthcare provider for further evaluation</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-check-circle text-blue-600 mt-1 mr-3"></i>
+                    <span>Benign findings typically don't require immediate treatment</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-check-circle text-blue-600 mt-1 mr-3"></i>
+                    <span>Follow up as recommended by your medical professional</span>
+                  </li>
+                </ul>
+              </div>
+              {% else %}
+              <div class="bg-red-50 p-6 rounded-lg">
+                <ul class="space-y-3">
+                  <li class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-600 mt-1 mr-3"></i>
+                    <span>Immediate consultation with a healthcare provider is recommended</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-600 mt-1 mr-3"></i>
+                    <span>Further diagnostic testing may be necessary</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-600 mt-1 mr-3"></i>
+                    <span>Do not delay seeking professional medical advice</span>
+                  </li>
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Important Notice -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-10">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-yellow-800">Important Notice</h3>
+                  <div class="mt-2 text-sm text-yellow-700">
+                    <p>This analysis is provided by an AI system and should not be considered a definitive medical diagnosis. Always consult with a qualified healthcare professional for medical advice and diagnosis.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="/" class="flex-1 bg-primary hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-300 text-center">
+                <i class="fas fa-redo mr-2"></i> Analyze Another Image
+              </a>
+              <button id="download-report" class="flex-1 border border-primary text-primary hover:bg-blue-50 font-medium py-3 px-4 rounded-lg transition duration-300">
+                <i class="fas fa-download mr-2"></i> Download Full Report (PDF)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer (from result.html) -->
+  <footer class="bg-blue-600 text-white py-6">
+    <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+      <div class="flex items-center space-x-2 mb-4 md:mb-0">
+        <i class="fas fa-laptop-medical text-2xl"></i>
+        <span class="text-xl font-bold">BreastScan<span class="text-accent">AI</span></span>
+      </div>
+      <nav>
+        <ul class="flex space-x-6 text-sm md:text-base">
+          <li><a href="/#home" class="hover:text-gray-200 transition">Home</a></li>
+          <li><a href="/about" class="hover:text-accent transition">About</a></li>
+          <li><a href="/#upload" class="hover:text-gray-200 transition">Upload</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="text-center text-gray-100 text-sm mt-4">
+      © 2025 BreastScanAI. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Smooth Scroll for /# links -->
+  <script>
+    document.querySelectorAll('a[href^="/#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const targetId = this.getAttribute('href').split('#')[1];
+        const target = document.getElementById(targetId);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+
+  <!-- Animate confidence bars + Robust PDF Download -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Animate bars
+      const bars = document.querySelectorAll('.confidence-bar');
+      bars.forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => {
+          setTimeout(() => { bar.style.width = w; }, 200);
+        });
+      });
+
+      const btn = document.getElementById('download-report');
+      btn?.addEventListener('click', async function () {
+        const btnEl = this;
+        const originalHTML = btnEl.innerHTML;
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+
+        try {
+          const card = document.getElementById('results-card');
+          if (!card) throw new Error('Results card not found');
+
+          // Ensure all images inside the card are loaded before capture
+          await waitForImages(card);
+
+          // High-resolution canvas capture with color preservation
+          const scale = Math.max(2, window.devicePixelRatio || 1);
+          const canvas = await html2canvas(card, {
+            scale,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            allowTaint: false,
+            imageTimeout: 15000,
+            logging: false,
+            removeContainer: true
+          });
+
+          const imgData = canvas.toDataURL('image/png');
+
+          // Create A4 PDF and fit image while keeping aspect ratio
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pageW = pdf.internal.pageSize.getWidth();
+          const pageH = pdf.internal.pageSize.getHeight();
+          const margin = 10;
+          const availW = pageW - margin * 2;
+          const availH = pageH - margin * 2;
+
+          // Compute render size in mm, preserving aspect ratio and fitting inside margins
+          let renderW = availW;
+          let renderH = (canvas.height * renderW) / canvas.width;
+          if (renderH > availH) {
+            renderH = availH;
+            renderW = (canvas.width * renderH) / canvas.height;
+          }
+          const x = (pageW - renderW) / 2;
+          const y = (pageH - renderH) / 2;
+
+          pdf.addImage(imgData, 'PNG', x, y, renderW, renderH);
+
+          // Build filename with context
+          const fileName = document.getElementById('file-name')?.textContent?.trim() || 'image';
+          const stamp = new Date();
+          const yyyy = stamp.getFullYear();
+          const mm = String(stamp.getMonth() + 1).padStart(2, '0');
+          const dd = String(stamp.getDate()).padStart(2, '0');
+          const hh = String(stamp.getHours()).padStart(2, '0');
+          const min = String(stamp.getMinutes()).padStart(2, '0');
+          const ss = String(stamp.getSeconds()).padStart(2, '0');
+          const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+          pdf.save(`BreastScanAI_Result_${safeName}_${yyyy}-${mm}-${dd}_${hh}-${min}-${ss}.pdf`);
+        } catch (err) {
+          console.error('PDF generation failed:', err);
+          // Simple text fallback to guarantee a downloadable file
+          try {
+            const benign = document.getElementById('benign-confidence')?.textContent || 'N/A';
+            const malignant = document.getElementById('malignant-confidence')?.textContent || 'N/A';
+            const normal = document.getElementById('normal-confidence')?.textContent || 'N/A';
+            const fname = document.getElementById('file-name')?.textContent || 'image';
+            const up = document.getElementById('upload-time')?.textContent || '';
+
+            const diagnosisBlock = (function(){
+              const diagContainer = Array.from(document.querySelectorAll('h3'))
+                .find(h => /Normal Tissue Detected|Benign Tissue Detected|Malignant Tissue Detected/i.test(h.textContent || ''));
+              return diagContainer ? diagContainer.textContent.trim() : 'Diagnosis: N/A';
+            })();
+
+            const content = `BreastScanAI Analysis Report
+
+File Analyzed: ${fname}
+Uploaded: ${up}
+
+Detection Results:
+- Benign: ${benign}
+- Malignant: ${malignant}
+- Normal: ${normal}
+
+${diagnosisBlock}
+
+Important Notice:
+This analysis is provided by an AI system and should not be considered a definitive medical diagnosis. Always consult with a qualified healthcare professional.
+
+Generated on: ${new Date().toString()}
+`;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'BreastScanAI_Report.txt';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 0);
+          } catch (fallbackErr) {
+            console.error('Fallback download failed:', fallbackErr);
+            alert('Sorry, the report could not be downloaded. Please try again.');
+          }
+        } finally {
+          btnEl.innerHTML = originalHTML;
+          btnEl.disabled = false;
+        }
+      });
+
+      // Wait for <img> tags inside a container
+      function waitForImages(root) {
+        const imgs = Array.from(root.querySelectorAll('img'));
+        if (imgs.length === 0) return Promise.resolve();
+
+        return Promise.all(
+          imgs.map(img => {
+            if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+            return new Promise(resolve => {
+              const onLoadEnd = () => {
+                img.removeEventListener('load', onLoadEnd);
+                img.removeEventListener('error', onLoadEnd);
+                resolve();
+              };
+              img.addEventListener('load', onLoadEnd, { once: true });
+              img.addEventListener('error', onLoadEnd, { once: true });
+            });
+          })
+        );
+      }
+    });
+  </script>
+</body>
+</html>
